@@ -1,0 +1,47 @@
+#!/bin/bash
+
+#curl -sL https://raw.githubusercontent.com/rancher/install-docker/master/18.06.1.sh |bash
+
+echo ""
+echo -e " \033[1;31m>> Docker install for Rancher 1.6.x <<\033[0m "
+echo ""
+echo "  ██████╗ ███████╗██╗   ██╗ ██████╗ ██████╗ ███████╗    ████████╗███████╗ █████╗ ███╗   ███╗ "
+echo "  ██╔══██╗██╔════╝██║   ██║██╔═══██╗██╔══██╗██╔════╝    ╚══██╔══╝██╔════╝██╔══██╗████╗ ████║ "
+echo "  ██║  ██║█████╗  ██║   ██║██║   ██║██████╔╝███████╗       ██║   █████╗  ███████║██╔████╔██║ "
+echo "  ██║  ██║██╔══╝  ╚██╗ ██╔╝██║   ██║██╔═══╝ ╚════██║       ██║   ██╔══╝  ██╔══██║██║╚██╔╝██║ "
+echo "  ██████╔╝███████╗ ╚████╔╝ ╚██████╔╝██║     ███████║       ██║   ███████╗██║  ██║██║ ╚═╝ ██║ "
+echo "  ╚═════╝ ╚══════╝  ╚═══╝   ╚═════╝ ╚═╝     ╚══════╝       ╚═╝   ╚══════╝╚═╝  ╚═╝╚═╝     ╚═╝ "
+echo ""
+
+# Rancher supported docker Ver install# Rancher supported docker Ver install
+rancherdocker=$(curl -sL https://rancher.com/docs/rancher/v1.6/en/hosts/ | grep releases.rancher.com | tail -n1 | awk -F"/" '{print $5}' | awk -F"|" '{print $1}')
+curl -sL https://releases.rancher.com/install-docker/$rancherdocker |sh
+
+#docker log size setting
+cat << EOF > /etc/docker/daemon.json
+{
+  "log-driver": "json-file",
+  "log-opts": {
+    "max-size": "100m",
+    "max-file": "10"
+  }
+}
+EOF
+
+
+
+# Docker-compose install
+composevr=$(curl -sL https://github.com/docker/compose/releases |grep curl |head -n1 | awk -F"/" '{ print $8 }')
+curl -sL https://github.com/docker/compose/releases/download/$composevr/docker-compose-`uname -s`-`uname -m` -o /usr/bin/docker-compose
+sudo chmod +x /usr/bin/docker-compose
+sudo systemctl enable docker
+sudo systemctl start docker
+sudo systemctl status docker |grep Active
+
+## Get the dcs from docker
+curl -sL bit.ly/ralf_dcs -o ./dcs
+sudo chmod +x ./dcs
+sudo mv ./dcs /usr/bin/dcs
+clear
+echo -e "\033[1;33m >> $(docker-compose -v)\033[0m"
+echo -e "\033[1;33m >> $(docker -v)\033[0m"
